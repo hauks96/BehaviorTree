@@ -225,7 +225,7 @@ namespace BHT
         /**
          * Attach the children to the node within the constructor using the _attach(child*) method
          */
-        explicit ISelectorBranch(Node<T>* parent = nullptr, std::string name = "") : Node<T>(parent, name)
+        explicit ISelectorBranch(std::string name = "") : Node<T>(nullptr, name)
         {}
 
         NodeState evaluate() override
@@ -269,7 +269,7 @@ namespace BHT
         /**
          * Attach the children to the node within the constructor using the _attach(child*) method
          */
-        explicit ISequenceBranch(Node<T>* parent = nullptr, std::string name = "") : Node<T>(parent, name)
+        explicit ISequenceBranch(std::string name = "") : Node<T>(nullptr, name)
         {}
 
         NodeState evaluate() override
@@ -306,7 +306,7 @@ namespace BHT
     class IConditionLeaf : public Node<T>
     {
     public:
-        IConditionLeaf(Node<T>* parent = nullptr, std::string name = "") : Node<T>(parent, name){}
+        IConditionLeaf(std::string name = "") : Node<T>(nullptr, name){}
 
         NodeState evaluate() override {
             if (condition())
@@ -338,7 +338,7 @@ namespace BHT
     class IActionLeaf : public Node<T>
     {
     public:
-        IActionLeaf(Node<T>* parent = nullptr, std::string name = ""): Node<T> (parent, name) {}
+        IActionLeaf(std::string name = ""): Node<T> (nullptr, name) {}
 
         NodeState evaluate() override {
             return action();
@@ -364,7 +364,7 @@ namespace BHT
         /**
          * Attach the children to the node within this method. (Using _attach(child))
          */
-        IParalellSequence(Node<T>* parent = nullptr, std::string name = "") : Node<T>(parent, name)
+        IParalellSequence(std::string name = "") : Node<T>(nullptr, name)
         {};
 
         NodeState evaluate() override {
@@ -392,7 +392,7 @@ namespace BHT
     template<class T>
     class IDecorator : public Node<T> {
     public:
-        IDecorator(Node<T>* child) : Node<T>(nullptr, "Decorator")
+        IDecorator(Node<T>* child, std::string name = "") : Node<T>(nullptr, name)
         {
             this->child = child;
             child->parent = this;
@@ -418,7 +418,7 @@ namespace BHT
     template<class T>
     class Inverter : public IDecorator<T> {
     public:
-        Inverter(Node<T>* child) : IDecorator<T>(child)
+        Inverter(Node<T>* child) : IDecorator<T>(child, "Inverter")
         {}
         NodeState decorate(NodeState childEvaluation) override
         {
