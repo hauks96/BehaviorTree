@@ -398,7 +398,7 @@ namespace BHT
 
         NodeState evaluate() override
         {
-            return decorate();
+            return decorate(child.eval());
         }
 
         void _propagate_context() override
@@ -408,7 +408,7 @@ namespace BHT
             child->_propagate_context();
         }
 
-        virtual NodeState decorate() = 0;
+        virtual NodeState decorate(NodeState childEvaluation) = 0;
 
         Node<T>* child;
     };
@@ -418,13 +418,11 @@ namespace BHT
     public:
         Inverter(Node<T>* child) : IDecorator<T>(child)
         {}
-        NodeState decorate() override
+        NodeState decorate(NodeState childEvaluation) override
         {
-            NodeState childEval = this->child->eval();
-
-            if (childEval == NodeState::SUCCESS) return NodeState::FAILURE;
-            if (childEval == NodeState::FAILURE) return NodeState::SUCCESS;
-            if (childEval == NodeState::RUNNING) return NodeState::RUNNING;
+            if (childEvaluation == NodeState::SUCCESS) return NodeState::FAILURE;
+            if (childEvaluation == NodeState::FAILURE) return NodeState::SUCCESS;
+            if (childEvaluation == NodeState::RUNNING) return NodeState::RUNNING;
         }
     };
 
