@@ -19,6 +19,8 @@
  * - ISequenceBranch
  * - IActionLeaf
  * - IConditionLeaf
+ * - IDecorator
+ * - Inverter (decorator)
  */
 namespace BHT
 {
