@@ -129,10 +129,9 @@ namespace BHT
             if (this->context == nullptr)
                 throw std::runtime_error("Context not initialized");
             
-            // Remove this loop if you want to disable recursive debug hierarchy in tree
             for (Node* node : children)
             {
-                if (this->DEBUG) node->DEBUG = true;
+                if (this->DEBUG) node->DEBUG = true; // Remove line if you want to disable recursive debug hierarchy in tree
                 node->context = this->context;
                 node->_propagate_context();
             }
