@@ -88,19 +88,22 @@ namespace BHT
                 break;
             }
         }
-
+        
+        /**
+         * Call to evaluate a node
+         */
         NodeState eval()
         {
-            NodeState evalState = evaluate();
+            this->state = _evaluate();
             if (this->DEBUG) printState();
-            return evalState;
+            return this->state;
         }
 
         /**
-         * A method to evaluate a node in the behavior tree. Must be implemented.
+         * A method to evaluate a node in the behavior tree. Must be implemented in interfaces.
          * @return The evaluation state of the node
          */
-        virtual NodeState evaluate() = 0;
+        virtual NodeState _evaluate() = 0;
 
         /**
          * Attach a child node.
@@ -161,7 +164,7 @@ namespace BHT
             delete child;
         }
 
-        NodeState evaluate() override
+        NodeState _evaluate() override
         {
             this->state = child->eval();
             return this->state;
@@ -197,7 +200,7 @@ namespace BHT
          */
         void Update()
         {
-            _root->evaluate();
+            _root->_evaluate();
         }
 
     private:
@@ -228,13 +231,12 @@ namespace BHT
         explicit ISelectorBranch(std::string name = "") : Node<T>(nullptr, name)
         {}
 
-        NodeState evaluate() override
+        NodeState _evaluate() override
         {
             for (Node<T>* child : this->children)
             {
-                // Assign the new state
-                child->state = child->eval();
-                this->state = child->state;
+                // Update state of child
+                child->eval();
                 switch (child->state)
                 {
                     // Return first successful child branch
@@ -272,23 +274,21 @@ namespace BHT
         explicit ISequenceBranch(std::string name = "") : Node<T>(nullptr, name)
         {}
 
-        NodeState evaluate() override
+        NodeState _evaluate() override
         {
             // Iterate and evaluate all children
             for (Node<T>* child : this->children)
             {
                 // Assign new child state
-                child->state = child->eval();
-                // State of this node is the same as child
-                this->state = child->state;
+                child->eval();
                 // Stop iterating if the state isn't success
                 if (child->state != NodeState::SUCCESS)
                 {
                     return child->state;
                 }
             }
-            // Return Success
-            return this->state;
+            // All child nodes returned success
+            return NodeState::SUCCESS;
         }
     };
 
@@ -308,14 +308,12 @@ namespace BHT
     public:
         IConditionLeaf(std::string name = "") : Node<T>(nullptr, name){}
 
-        NodeState evaluate() override {
-            if (condition())
-            {
-                this->state = NodeState::SUCCESS;
-                return this->state;
-            }
-            this->state = NodeState::FAILURE;
-            return this->state;
+        NodeState _evaluate() override {
+            // Condition holds
+            if (condition()) 
+                return NodeState::SUCCESS;
+            // Condition does not hold (false)
+            return NodeState::FAILURE;
         }
         /**
          * This method describes whether the node's condition is met or not.
@@ -340,7 +338,7 @@ namespace BHT
     public:
         IActionLeaf(std::string name = ""): Node<T> (nullptr, name) {}
 
-        NodeState evaluate() override {
+        NodeState _evaluate() override {
             return action();
         }
 
@@ -367,24 +365,21 @@ namespace BHT
         IParalellSequence(std::string name = "") : Node<T>(nullptr, name)
         {};
 
-        NodeState evaluate() override {
+        NodeState _evaluate() override {
             bool allSuccess = true;
             // Iterate and evaluate all children
             for (Node<T>* child : this->children)
             {
-                // Assign new child state
-                child->state = child->eval();
-                // State of this node is the same as child
-                this->state = child->state;
-                // Stop iterating if the state isn't success
+                // Update child state
+                child->eval();
+                // Stop iterating if the state is failure
                 if (child->state == NodeState::FAILURE) return child->state;
+                // Signal not finished if any node is running
                 if (child->state == NodeState::RUNNING) allSuccess = false;
             }
-            if (!allSuccess) {
-                this->state = NodeState::RUNNING;
-                return NodeState::RUNNING;
-            }
-            this->state = NodeState::SUCCESS;
+            // Some nodes are still running
+            if (!allSuccess) return NodeState::RUNNING;
+            // All nodes are done
             return NodeState::SUCCESS;
         }
     };
@@ -398,7 +393,7 @@ namespace BHT
             child->parent = this;
         }
 
-        NodeState evaluate() override
+        NodeState _evaluate() override
         {
             return decorate(child.eval());
         }
@@ -422,6 +417,7 @@ namespace BHT
         {}
         NodeState decorate(NodeState childEvaluation) override
         {
+            // Invert Success and Failure states.
             if (childEvaluation == NodeState::SUCCESS) return NodeState::FAILURE;
             if (childEvaluation == NodeState::FAILURE) return NodeState::SUCCESS;
             if (childEvaluation == NodeState::RUNNING) return NodeState::RUNNING;
