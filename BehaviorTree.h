@@ -73,6 +73,11 @@ namespace BHT
                 delete node;
             }
         }
+        
+        /**
+         * Prints the state of the node together with it's assigned name.
+         * If a node in the tree is marked with DEBUG=True, all nodes in it's subtree will print this.
+         */
         void printState()
         {
             switch (this->state)
@@ -123,7 +128,8 @@ namespace BHT
         {
             if (this->context == nullptr)
                 throw std::runtime_error("Context not initialized");
-
+            
+            // Remove this loop if you want to disable recursive debug hierarchy in tree
             for (Node* node : children)
             {
                 if (this->DEBUG) node->DEBUG = true;
